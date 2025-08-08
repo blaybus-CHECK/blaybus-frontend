@@ -1,0 +1,61 @@
+name: React 웹 애플리케이션 배포
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: github repository 코드 불러오기
+        uses: actions/checkout@v4
+
+      - name: Node.js 설치
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: .env 파일 설정
+        run: echo "{{ secrets.APPLICATION_ENV }}" > ./.env
+      
+      - name: 의존성 설치 및 빌드
+        run: |
+          npm install
+          npm run build
+      
+      - name: AWS Resource 접근을 위한 Credentials 설정
+        uses: aws-actions/configure-aws-credential@v4
+        with:
+          aws-region: 'ap-northeast-2'
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      
+      - name: ECR 로그인
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v4
+      
+      - name: Docker 이미지 빌드
+        run: docker build -t blaybus-frontend .
+      
+      - name: Docker 이미지 태그
+        run: docker tag blaybus-frontend ${{ steps.login-ecr.outputs.registry }}/blaybus-frontend:latest
+
+      - name: Docker 이미지 푸시
+        run: docker push ${{ steps.login-ecr.outputs.registry }}/blaybus-frontend:latest
+
+      - name: EC2에 SSH 접속
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME}}
+          key: ${{ secrets.EC2_PRIVATE_KEY }}
+          script_stop: true
+          script: |
+            if [ "$(docker ps -aq -f name=blaybus-frontend)" ]; then
+                docker stop blaybus-frontend || true
+                docker rm blaybus-frontend || true
+            fi
+            docker pull ${{ steps.login-ecr.outputs.registry }}/blaybus-frontend:latest
+            docker run -d --name blaybus-frontend -p 3000:80 ${{ steps.login-ecr.outputs.registry }}/blaybus-frontend:latest
