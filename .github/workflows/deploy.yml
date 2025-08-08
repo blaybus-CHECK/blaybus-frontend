@@ -34,7 +34,7 @@ jobs:
       
       - name: ECR 로그인
         id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v4
+        uses: aws-actions/amazon-ecr-login@v2
       
       - name: Docker 이미지 빌드
         run: docker build -t blaybus-frontend .
