@@ -25,6 +25,7 @@ function App() {
         </a>
       </div>
       <h1>블레이버스 프론트엔드 데모</h1>
+      <h1>저는 이세현입니다.</h1>
       <div className="card">
         <p>{hello}</p>
         <button onClick={onClick}>api 요청하기</button>
