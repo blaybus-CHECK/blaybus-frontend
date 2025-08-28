@@ -2,7 +2,8 @@ import { useState } from "react";
 import reactLogo from "./assets/react.svg";
 import viteLogo from "/vite.svg";
 import "./App.css";
-import { getHello } from "./api/hello/hello.ts";
+import { getHello, login, signUp } from "./api/hello/hello.ts";
+import axios from "axios";
 
 function App() {
   const [hello, setHello] = useState("");
@@ -13,6 +14,15 @@ function App() {
       setHello(res.data);
     });
   };
+
+  const onClick2 = () => {
+    // signUp().then((res)=>{
+    //   console.log(res);
+    // })
+    login().then((res)=>{
+      console.log(res);
+    });
+  }
 
   return (
     <>
@@ -28,7 +38,7 @@ function App() {
       <h1>저는 이세현입니다.</h1>
       <div className="card">
         <p>{hello}</p>
-        <button onClick={onClick}>api 요청하기</button>
+        <button onClick={onClick2}>api 요청하기</button>
         <p>
           Edit <code>src/App.tsx</code> and save to test HMR
         </p>
